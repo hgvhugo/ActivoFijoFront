@@ -1,0 +1,221 @@
+/* Code by: César Carmona */
+/* Date: 01/09/2024 */
+/* Description: Estilos de App  */
+
+/* Estilos generales de la pagina principal contenedora*/
+
+:root {
+  --primary-color: #5C0314 ; /* Cambia el color según tu preferencia */
+  --secondary-color: #5f5f5f;
+  --thirt-color: #00CCFF;
+  --fourth-color: #1D1D1B;
+  --font-color: white;
+  --font-color2: black;
+  
+  /* --error-notitication-color:#d10003;
+  --ok-notificacion-color:#004208; */
+} 
+
+
+/**************************** Estilos Header *******************************/
+.header-principal {
+  width: 100vw; /* Ajusta el ancho del header al 100% de la pantalla */
+  height: 8vh; /* Ajusta la altura del header a un 8% de la altura de la pantalla */
+  background: #E8E8E8;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding: 0 20px; /* Añade padding a los lados del header */
+}
+
+.img-header {
+  width: 11vw; /* Ajusta el ancho de las imágenes al 9% del ancho de la pantalla */
+  height: auto; /* Mantén la proporción de las imágenes */
+  margin-right: .15vw; /* Añade un margen derecho para separar las imágenes */
+}
+
+ 
+/**************************** Estilos Contenedor *******************************/
+.contenedor-principal {
+  display: flex;
+  width: 100vw;
+}
+
+/* Estilos para el botón de menú hamburguesa */
+.menu-toggle {
+  display: none;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* Estilos para el menú principal */
+.menu-principal {
+  width: 15vw; /* Ajusta el ancho del menú a un 15% del ancho total */
+  background: #546578;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.contenedor-padre {
+  width: 84.5vw; /* Ajusta el ancho del contenedor hijo al 80% del ancho total */
+  display: flex; 
+  justify-content: center;
+  align-items: center; 
+  overflow: auto;
+  background-color: #E8E8E8;
+  flex-direction: column;
+  min-height: 90vh;
+
+  /* flex-direction: column; */
+}
+
+.contenedor-hijo {
+  width: 84vw; /* Ajusta el ancho del contenedor hijo al 80% del ancho total */
+  /* display: flex; 
+  justify-content: center;
+  align-items: center; 
+  overflow: auto; */
+  background-color: #E8E8E8;
+  min-height: 83vh;
+
+  /* flex-direction: column; */ 
+}
+
+/**************************** Estilos Footer *******************************/
+
+.footer-principal {
+  width: 100%; /* Asegura que el footer ocupe todo el ancho */
+  height: 5vh;
+  display: flex; 
+  justify-content: right;
+  align-items: center; 
+  background: #E8E8E8;
+  padding: 0 2%; /* Añade padding a los lados del footer */
+  font-size: .85vw; /* Ajusta el tamaño del texto de manera responsiva */
+
+}
+ 
+
+/**************************** Estilos Divider *******************************/
+.divider {
+  border-left: .1vw solid #E8E8E8;; /* Cambia el color según tu preferencia */
+ }
+ .linea-divisoria {
+  width: 100%;
+  border: 0;
+  height: 1px;
+  background: #727F8D/* Color de la línea divisoria */
+  
+}
+
+
+
+
+/**************************** Estilos de pantallas  responsivos ***********************************/
+
+/* Estilos para el menú cuando está cerrado en pantallas pequeñas */
+.menu-principal {
+  transform: translateX(-100%);
+}
+
+/* Estilos para el menú cuando está abierto */
+.menu-principal.open {
+  transform: translateX(0);
+}
+
+.responsiveContainer {
+  max-width: 300px;
+
+  @media (min-width: em(400px)) {
+    max-width: 400px;
+  }
+
+  @media (min-width: em(600px)) {
+    max-width: 600px;
+  }
+}
+
+
+ @media (min-width: 768px) {
+  .menu-toggle {
+    display: none;
+  }
+
+  .menu-principal {
+    transform: translateX(0);
+    width: 15vw; /* Ajusta el ancho del menú a un 15% del ancho total */
+  }
+}
+
+@media (max-width: 767px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .menu-principal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 60vw; /* Ajusta el ancho del menú a un 60% del ancho total en pantallas pequeñas */
+    transform: translateX(-100%);
+  }
+
+  .menu-principal.open {
+    transform: translateX(0);
+  }
+}
+
+
+/**************************** Estilos de componentes de aplicacion ***********************************/
+.titulo-pagina{
+
+  font-size: 1.3vw;
+  font-weight: bold;
+  color: #34383d;
+  margin-bottom: 1.5vw;
+  background-color: #ffffff;
+  margin: auto; 
+  width: 85vw;
+  padding: .3vw;
+  padding-left: 1vw;
+  
+}
+
+.boton-firmar{
+  background-color: #888a87;
+  color: #ffffff;
+  font-size: 1vw;
+  font-weight: bold;
+  padding: .5vw;
+  border-radius: 1vw;
+  margin-top: 1vw;
+  margin-bottom: 1vw;
+}
+
+
+/* .filter-item {
+  
+  display: flex;
+  align-items: center;
+  gap: 10%; 
+  height: 100%; 
+}
+
+.filter-item .mantine-Select-root {
+  flex-grow: 1; 
+}
+
+.filter-item .mantine-Text-root {
+  flex-grow: 1; 
+} */
+

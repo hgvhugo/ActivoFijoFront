@@ -1,0 +1,34 @@
+ .root {
+  --mantine-color-gray-6:  #ffffff;
+
+   background-color: var(--notification-color) !important; 
+
+  /* &::before {
+    background-color: var(--mantine-color-white);, var(--mantine-primary-color-filled)
+  }
+   */
+}
+
+.root::before {
+  background-color: var(--mantine-color-white) !important;
+}
+
+.description,
+.title,
+.icon,
+.closeButton,
+.message,
+.children {
+  color: var(--mantine-color-white) !important;
+}
+ 
+
+.mantine-Notification-body,
+.mantine-Notification-description	,
+.data-with-title,
+.mantine-Notifications-notification			 {
+
+  color: var(--mantine-color-red-6); 
+  font-size: 100px;
+}
+ 

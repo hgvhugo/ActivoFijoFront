@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
  
  
 
-export function useCreate(url, conAutorizacion, queryKey = ['consulta']) {
+export function useCreate(url, conAutorizacion) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (registro) => {
@@ -24,10 +24,12 @@ export function useCreate(url, conAutorizacion, queryKey = ['consulta']) {
       }
 
       const data = await response.json();
+      // return data.data;
+
       return data;
     },
     onMutate: (nuevoRegistro) => {
-      queryClient.setQueryData(queryKey, (regPrevios) => [
+      queryClient.setQueryData(['consulta'], (regPrevios) => [
         ...regPrevios,
         {
           ...nuevoRegistro,
@@ -35,7 +37,7 @@ export function useCreate(url, conAutorizacion, queryKey = ['consulta']) {
       ]);
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(queryKey, (old) => [
+      queryClient.setQueryData(['menus'], (old) => [
         ...(Array.isArray(old) ? old : []),
         data,
       ]);
@@ -43,17 +45,24 @@ export function useCreate(url, conAutorizacion, queryKey = ['consulta']) {
     onError: (error) => {
       console.error(error);
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['consulta'] }),
   });
 }
 
-export function useGet(url, conAutorizacion, queryKey = ['consulta']) {
+export function useGet(url, conAutorizacion) {
+  // console.log('useGet se está ejecutando');
+
   return useQuery({
-    queryKey,
+    queryKey: ['consulta'],
     queryFn: async () => {
+      console.log('queryFn se está ejecutando');
+
       const headers = {};
       if (conAutorizacion && conAutorizacion.trim() !== '') {
+        console.log('Haciendo petición con autorización');
         headers['Authorization'] = `Bearer ${conAutorizacion}`;
+      } else {
+        console.log('Haciendo petición sin autorización');
       }
 
       const response = await fetch(url, {
@@ -69,13 +78,21 @@ export function useGet(url, conAutorizacion, queryKey = ['consulta']) {
       }
 
       const data = await response.json();
-      return data;
+      console.log('Respuesta recibida', data);
+
+      // const datos = data.data.map((dato) => ({
+      //   ...dato,
+      // }));
+      const datos = data;
+      // console.log('datos*******************');
+      // console.log(datos);
+      return datos;
     },
     refetchOnWindowFocus: false,
   });
 }
 
-export function useUpdate(url, conAutorizacion, queryKey = ['consulta']) {
+export function useUpdate(url, conAutorizacion) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (registro) => {
@@ -97,23 +114,31 @@ export function useUpdate(url, conAutorizacion, queryKey = ['consulta']) {
       }
 
       const data = await response.json();
-      return data;
+      console.log('Respuesta recibida', data);
+
+      // const datos = data.data.map((dato) => ({
+      //   ...dato,
+      // }));
+      const datos = data;
+      // console.log('datos*******************');
+      // console.log(datos);
+      return datos;
     },
     onMutate: (nuevoRegistro) => {
-      queryClient.setQueryData(queryKey, (registrosPrevios) =>
+      queryClient.setQueryData([queryClient], (registrosPrevios) =>
         registrosPrevios?.map((registroPrevio) =>
           registroPrevio.id === nuevoRegistro.id ? nuevoRegistro : registroPrevio,
         ),
       );
     },
-    onSuccess: () => queryClient.invalidateQueries(queryKey),
+    onSuccess: () => queryClient.invalidateQueries(['consulta']),
     onError: (error) => {
       console.error(error);
     },
   });
 }
 
-export function useDelete(url, conAutorizacion, queryKey = ['consulta']) {
+export function useDelete(url, conAutorizacion) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (registro) => {
@@ -135,14 +160,22 @@ export function useDelete(url, conAutorizacion, queryKey = ['consulta']) {
       }
 
       const data = await response.json();
-      return data;
+      console.log('Respuesta recibida', data);
+
+       // const datos = data.data.map((dato) => ({
+      //   ...dato,
+      // }));
+      const datos = data;
+      // console.log('datos*******************');
+      // console.log(datos);
+      return datos;
     },
     onMutate: (userId) => {
-      queryClient.setQueryData(queryKey, (prevUsers) =>
+      queryClient.setQueryData(['consulta'], (prevUsers) =>
         prevUsers?.filter((user) => user.id !== userId),
       );
     },
-    onSuccess: () => queryClient.invalidateQueries(queryKey),
+    onSuccess: () => queryClient.invalidateQueries([queryClient]),
     onError: (error) => {
       console.error(error);
     },

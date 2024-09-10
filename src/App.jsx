@@ -9,6 +9,7 @@ import Menu from "./components/Menu.jsx";
 import RecepcionBienes from "./pages/RecepcionBienes.jsx";
 import AsignacionBienes from "./pages/AsignacionBienes.jsx";
 import Firma from "./components/Firma/Firma.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,6 +38,8 @@ function App() {
             <Routes>
               <Route path="/recepcionBienes" element={<RecepcionBienes />} />
               <Route path="/asignacionBienes" element={<AsignacionBienes />} />
+              <Route path="/dashboard" element={<Dashboard/>} />
+
               <Route path="/firmar" element={<Firma />} />
 
             </Routes>

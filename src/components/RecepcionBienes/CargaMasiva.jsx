@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   FileInput,
   Table,
@@ -12,6 +12,7 @@ import {
   ActionIcon,
   Group,
   Text,
+  LoadingOverlay,Loader
 } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import {
@@ -29,6 +30,8 @@ import {
   useDelete,
 } from "../../hooks/useCRUDTables.js";
 import { modals } from "@mantine/modals";
+import { saveAs } from 'file-saver';
+import { URL_BASE_SERVICIOS,API_ENDPOINTS } from "../../config/Endpoints.jsx";
 
 const CargaMasiva = () => {
   const [file, setFile] = useState(null);
@@ -36,7 +39,11 @@ const CargaMasiva = () => {
   const [url, setUrl] = useState("http://localhost:3001/api/consulta");
   const [conAutorizacion, setConAutorizacion] = useState("");
   const [bulkLoad, setBulkLoad] = useState(false);
- 
+  const fileInputRef = useRef(null);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [fileName, setFileName] = useState("");
+
   const icon = (
     <IconFileUpload style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
   );
@@ -96,6 +103,44 @@ const CargaMasiva = () => {
   //     refetch();
   //   }, [data]);
 
+  const bulkLoadF = async () => {
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append("archivo", file);
+
+      const response = await fetch(
+        // "http://localhost:5056/api/RegistroBienes/cargar-excel",
+        URL_BASE_SERVICIOS+API_ENDPOINTS.CargaMasiva, 
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        handleSuccess("Carga masiva exitosa");
+        setBulkLoad(!bulkLoad);
+        setFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
+         }
+    
+
+      } else {
+        handleError("Error en la carga masiva");
+      }
+    } catch (error) {
+      console.error(error);
+      handleError("Error en la carga masiva");
+    }
+    finally{
+      setIsLoading(false);
+      setFile(null);
+    }
+  };
+
+
   const handleCreate = async ({ data, exitCreateMode }) => {
     try {
       // await created(data, url, conAutorizacion);
@@ -139,33 +184,7 @@ const CargaMasiva = () => {
       confirmProps: { color: "red" },
       onConfirm: () => deleted(row.original.id),
     });
-
-  // const handleFileChange = async (selectedFile) => {
-  //   setFile(selectedFile);
-
-  //   const reader = new FileReader();
-  //   reader.onload = async (e) => {
-  //     const arrayBuffer = e.target.result;
-  //     const workbook = new ExcelJS.Workbook();
-  //     await workbook.xlsx.load(arrayBuffer);
-  //     const worksheet = workbook.getWorksheet(1);
-  //     const parsedData = [];
-
-  //     worksheet.eachRow((row, rowNumber) => {
-  //       if (rowNumber === 1) return; // Skip header row
-  //       const rowData = {};
-  //       row.eachCell((cell, colNumber) => {
-  //         rowData[worksheet.getRow(1).getCell(colNumber).value] = cell.value;
-  //       });
-  //       parsedData.push(rowData);
-  //     });
-  //     //   console.log("Datos parseados:", parsedData);
-  //     setDatosExcel(parsedData);
-  //     setBulkLoad(true);
-  //   };
-  //   reader.readAsArrayBuffer(selectedFile);
-  // };
-
+ 
 
   const validateHeaders = (worksheet) => {
     const firstRow = worksheet.getRow(1);
@@ -174,12 +193,93 @@ const CargaMasiva = () => {
       headers.push(cell.value);
     });
     const expectedHeaders = Object.keys(defaultHeaders);
-    return headers.length === expectedHeaders.length && headers.every((header, index) => header === expectedHeaders[index]);
+    return (
+      headers.length === expectedHeaders.length &&
+      headers.every((header, index) => header === expectedHeaders[index])
+    );
   };
 
+
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Layout');
+  
+    // Añadir encabezados con formato de texto
+    worksheet.columns = Object.keys(defaultHeaders).map(header => ({
+      header,
+      key: header,
+      width: 20, // Puedes ajustar el ancho de las columnas según sea necesario
+      style: { numFmt: '@' } // Formato de texto
+    }));
+  
+   
+  
+    // Añadir filas adicionales (ejemplo de datos)
+    const dataRows = [
+      {
+        CodigoBien: "001",
+        NombreBien: "Laptop",
+        FechaEfectos: "2023-01-01",
+        EstatusId: "Activo",
+        FotoBien: "foto.jpg",
+        Descripcion: "Laptop Dell",
+        Marca: "Dell",
+        Modelo: "XPS 13",
+        Serie: "12345",
+        PartidaId: "001",
+        CambId: "002",
+        CucopId: "003",
+        NumeroContrato: "004",
+        NumeroFactura: "005",
+        FechaFactura: "2023-01-01",
+        ValorFactura: "1000",
+        ValorDepreciado: "800",
+        UnidadAdministrativaId: "006",
+        UbicacionId: "007",
+        EmpleadoId: "008",
+      },
+      // Puedes añadir más filas aquí
+    ];
+  
+    dataRows.forEach(data => {
+      const row = worksheet.addRow(data);
+      row.eachCell(cell => {
+        cell.numFmt = '@'; // Aplicar formato de texto a cada celda
+      });
+    });
+  
+    // Generar el archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+  
+    // Guardar el archivo
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, 'layout.xlsx');
+  };
+
+  
   const handleFileChange = async (selectedFile) => {
+    setBulkLoad(false);
     setFile(selectedFile);
- 
+    setFileName(selectedFile.name);
+
+    const acceptedTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ];
+
+    if (selectedFile && !acceptedTypes.includes(selectedFile.type)) {
+      handleError(
+        "El tipo de archivo no es aceptado. Por favor, seleccione un archivo .xlsx."
+      );
+      setError(
+        "El tipo de archivo no es aceptado. Por favor, seleccione un archivo .xlsx."
+      );
+      // setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+    setError("");
     const reader = new FileReader();
     reader.onload = async (e) => {
       const arrayBuffer = e.target.result;
@@ -189,7 +289,8 @@ const CargaMasiva = () => {
 
       if (!validateHeaders(worksheet)) {
         handleError("El archivo Excel no tiene la estructura esperada.");
-        console.log("El archivo Excel no tiene la estructura esperada."); 
+        console.log("El archivo Excel no tiene la estructura esperada.");
+        setFile(null);
         return;
       }
 
@@ -204,6 +305,7 @@ const CargaMasiva = () => {
       });
 
       setDatosExcel(parsedData);
+      console.log(parsedData)
       setBulkLoad(true);
     };
     reader.readAsArrayBuffer(selectedFile);
@@ -277,6 +379,13 @@ const CargaMasiva = () => {
       <Flex align="center" gap="md">
         <Button
           style={{ backgroundColor: "var(--primary-color)" }}
+          onClick={exportToExcel}
+          disabled={bulkLoad}
+        >
+          Obtener Layout
+        </Button>
+        <Button
+          style={{ backgroundColor: "var(--primary-color)" }}
           onClick={() => {
             table.setCreatingRow(true);
           }}
@@ -287,7 +396,7 @@ const CargaMasiva = () => {
         {bulkLoad && (
           <Button
             style={{ backgroundColor: "var(--primary-color)" }}
-            // onClick={ bulkLoadF }
+            onClick={ bulkLoadF }
             // disabled={!bulkLoad}
           >
             Confirmar Carga
@@ -305,6 +414,12 @@ const CargaMasiva = () => {
 
   return (
     <Paper shadow="xl" radius="md" p="xs" withBorder>
+      <LoadingOverlay
+          visible={isLoading}
+          zIndex={1000}
+          overlayProps={{ radius: 'sm', blur: 2 }}
+          loaderProps={{ color: 'var(--primary-color)', type: 'bars',size:'xl'  ,children:<div> <center>  <Loader   color='var(--primary-color)' size="xl" type="bars"  />Procesando archivo {fileName} ...</center></div> }}
+        />
       <Grid>
         <Grid.Col span={4} />
         <Grid.Col span={4}>
@@ -314,6 +429,10 @@ const CargaMasiva = () => {
             placeholder="Seleccione un archivo..."
             onChange={handleFileChange}
             accept=".xlsx"
+            ref={fileInputRef}
+            clearable
+            error={error}
+            value={file} // Controlar el valor del input de archivo
           />
         </Grid.Col>
         <Grid.Col span={4} />

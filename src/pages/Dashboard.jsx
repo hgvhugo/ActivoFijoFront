@@ -1,27 +1,24 @@
 import React from "react";
-import Busqueda2 from "../components/Busqueda2.jsx";
+import Busqueda from "../components/Busqueda.jsx";
 import { AspectRatio, rem, Space } from "@mantine/core";
 import Titulo from "../components/Titulo.jsx";
-import CargaMasiva from "../components/RecepcionBienes/CargaMasiva.jsx";
+import Dash from "../components/Dashboard/Dash.jsx";
 
-const RecepcionBienes = () => {
+const Dashboard = () => {
   return (
     <div>
-      <Titulo titulo="Recepción de Bienes (Alta)" />
+      <Titulo titulo="Dashboard Operativo" />
       <Space h="lg" />
 
-      <div>
-        <Busqueda2 />
-      </div>
-
+   
       <Space h="lg" />
       <div>
         {/* <AspecktRatio ratio={16 / 9} style={{ height: rem(500) }}> */}
-          <CargaMasiva />
+          <Dash/>
         {/* </AspecktRatio> */}
         </div>
     </div>
   );
 };
 
-export default RecepcionBienes;
+export default Dashboard;

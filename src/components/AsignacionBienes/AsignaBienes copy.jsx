@@ -30,8 +30,6 @@ import {
 } from "../../hooks/useCRUDTables.js";
 import { modals } from "@mantine/modals";
 import { URL_BASE_SERVICIOS, API_ENDPOINTS } from "../../config/Endpoints.jsx";
-import { Link } from "react-router-dom";  
-
 
 const AsignaBienes = ({ data, isLoading2, isError }) => {
   const [conAutorizacion, setConAutorizacion] = useState("");
@@ -41,7 +39,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
   const [edited, setEdited] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
   const [empleados, setEmpleados] = useState([]);
-  const [rowSelection, setRowSelection] = useState({});
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const buildUrlWithParams = (baseUrl, params) => {
     const url = new URL(baseUrl);
@@ -68,7 +66,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     isLoading: isCreating,
     error: createError,
     isSuccess: createSuccess,
-  } = useCreate(url, conAutorizacion,["AsignaBienes"]);
+  } = useCreate(url, conAutorizacion);
 
   const {
     data: fetched = [],
@@ -76,22 +74,20 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     isFetching: isFetching,
     isLoading: isLoading,
     refetch,
-  } = useGet(url, conAutorizacion,["AsignaBienes"]);
+  } = useGet(url, conAutorizacion);
 
   const { mutateAsync: updated, isLoading: isUpdating } = useUpdate(
     url,
     conAutorizacion
-    ,["AsignaBienes"]
   );
 
-  const { mutateAsync: deleted } = useDelete(url, conAutorizacion,["AsignaBienes"]);
+  const { mutateAsync: deleted } = useDelete(url, conAutorizacion);
 
   /// Se agrega el useEffect para refrescar la tabla
   useEffect(() => {
     refetch();
   }, [refreshData, url]);
 
- 
   ///////  Se agrega el useEffect para la consulta de empleados
   useEffect(() => {
     const fetchEmpleados = async () => {
@@ -109,7 +105,8 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     fetchEmpleados();
   }, []);
 
- 
+  console.log(empleados);
+
   const handleCreate = async ({ data, exitCreateMode }) => {
     try {
       // await created(data, url, conAutorizacion);
@@ -154,7 +151,28 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
       onConfirm: () => deleted(row.original.id),
     });
 
-    
+  const defaultHeaders = {
+    CodigoBien: "",
+    NombreBien: "",
+    FechaEfectos: "",
+    EstatusId: "",
+    FotoBien: "",
+    Descripcion: "",
+    Marca: "",
+    Modelo: "",
+    Serie: "",
+    PartidaId: "",
+    CambId: "",
+    CucopId: "",
+    NumeroContrato: "",
+    NumeroFactura: "",
+    FechaFactura: "",
+    ValorFactura: "",
+    ValorDepreciado: "",
+    UnidadAdministrativaId: "",
+    UbicacionId: "",
+  };
+
   const columnsToExclude = ["id", "FotoBien", "FotoBienFile", ""]; // Array de claves a excluir
 
   const columns = useMemo(() => {
@@ -181,7 +199,27 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
               },
               editVariant: "select",
               filterVariant: "select",
+              // mantineEditSelectProps: ({cell, row }) => ({
+              //   data: empleados.length > 0 ? empleados.map(emp => ({
 
+              //     value: emp.id.toString(),
+              //     label: `${emp.rfc} ${emp.nombre} ${emp.apellidoPaterno} ${emp.apellidoMaterno}`
+              //   })) : [{ value: '', label: '' }],
+              //   error: validationErrors?.empleado,
+              //   onChange: (value) => {
+              //     setEdited({
+              //       ...edited,
+              //       [row.id]: { ...row.original, [cell.column.id]: value },
+              //     });
+              //     console.log("Edited Object (onChange):", edited);
+              //   },
+              //   onBlur: (event) => {
+              //     if (row.id !== "mrt-row-create") {
+              //       setEdited({ ...edited, [row.id]: row._valuesCache });
+              //       console.log("Edited Object (onBlur):", edited);
+              //     }
+              //   },
+              // }),
               mantineFilterSelectProps: {
                 data:
                   empleados.length > 0
@@ -215,25 +253,76 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
   }, [fetched, edited, empleados, validationErrors]);
 
 
-  useEffect(() => {
-    //do something when the row selection changes...
-    console.info({ rowSelection });
-  }, [rowSelection]);
-
+  
+  const columnsData = useMemo(() => {
+    if (data && data.length > 0) {
+      return Object.keys(data[0])
+        .filter((key) => !columnsToExclude.includes(key)) // Filtrar las claves a excluir
+        .map((key) => {
+          const isObject =
+            typeof data[0][key] === "object" && data[0][key] !== null;
+          if (key === "empleado") {
+            return {
+              accessorKey: key,
+              header: "Empleado",
+              accessorFn: (originalRow) =>
+                originalRow[key]?.id?.toString() || "", // Convertir id a cadena para el filtrado
+              Cell: ({ row }) => {
+                const value = row.original[key];
+                if (value) {
+                  const { rfc, nombre, apellidoPaterno, apellidoMaterno } =
+                    value;
+                  return `${rfc} ${nombre} ${apellidoPaterno} ${apellidoMaterno}`;
+                }
+                return ""; // Valor por defecto si empleado es nulo
+              },
+              editVariant: "select",
+              filterVariant: "select",
+       
+              mantineFilterSelectProps: {
+                data:
+                  empleados.length > 0
+                    ? empleados.map((emp) => ({
+                        value: emp.id.toString(),
+                        label: `${emp.rfc} ${emp.nombre} ${emp.apellidoPaterno} ${emp.apellidoMaterno}`,
+                      }))
+                    : [{ value: "", label: "" }],
+              },
+            };
+          }
+          return {
+            accessorKey: key,
+            header: key.charAt(0).toUpperCase() + key.slice(1), // Convertir la clave a título
+            enableEditing: false,
+            Cell: ({ row }) => {
+              const value = row.original[key];
+              return isObject ? value?.descripcion || "N/A" : value ?? "N/A"; // Mostrar 'N/A' si no existe 'descripcion' o si el valor es null
+            },
+            mantineEditTextInputProps: ({ cell, row }) => ({
+              onBlur: (event) => {
+                if (row.id !== "mrt-row-create") {
+                  setEdited({ ...edited, [row.id]: row._valuesCache });
+                }
+              },
+            }),
+          };
+        });
+    }
+    return [];
+  }, [data, edited, empleados, validationErrors]);
 
   const table = useMantineReactTable({
-    // columns: data.length >0 ? columnsData : columns,
-    columns: columns,
+    columns: data.length >0 ? columnsData : columns,
     data: data.length >0 ? data : fetched,
     localization: MRT_Localization_ES,
     createDisplayMode: "row",
     editDisplayMode: "table",
- 
-// selectDisplayMode: 'switch',
-    enableRowSelection: (row) => edited.hasOwnProperty(row.id), // Solo permite la selección de filas contenidas en edited
-     getRowId: (row) => row.id, 
 
-    onRowSelectionChange: setRowSelection,
+    enableRowSelection: (row) => edited.hasOwnProperty(row.id), // Solo permite la selección de filas contenidas en edited
+    getRowId: (row) => row.id,
+    // onRowSelectionChange: (rows) => setSelectedRows(rows),
+     // selectDisplayMode: 'switch',
+
     initialState: { pagination: { pageSize: 5, pageIndex: 0 } },
     // positionToolbarAlertBanner: 'bottom',
 
@@ -258,6 +347,12 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
           children: "Error al obtener los datos, por favor intenta de nuevo.",
         }
       : undefined,
+    mantineTableContainerProps: {
+      sx: {
+        // minHeight: '500px',
+        tableLayout: "auto",
+      },
+    },
 
     mantineSelectCheckboxProps: {
       color: "var(--primary-color)",
@@ -267,11 +362,15 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     },
     mantinePaginationProps: {
       color: "var(--primary-color)",
-      // withEdges: false,
-      // showRowsPerPage: true,
+      withEdges: false,
+      showRowsPerPage: true,
     },
 
-    
+    // onEditingRowChange: (row, key, value) => {
+    //   setEdited({ ...edited, [row.id]: { ...row._valuesCache, [key]: value } });
+    // },
+
+    // paginationDisplayMode: "pages",
     onCreatingRowCancel: () => setValidationErrors({}),
     onCreatingRowSave: handleCreate,
     onEditingRowCancel: () => setValidationErrors({}),
@@ -316,7 +415,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
       isSaving: isCreating || isUpdating,
       showAlertBanner: isLoadingError,
       showProgressBars: isFetching,
-      rowSelection 
+      selectedRows: selectedRows,
     },
     
   });
@@ -334,9 +433,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
             style={{ backgroundColor: "var(--secondary-color)" }}
             size="xl"
             radius="md"
-            disabled={Object.keys(rowSelection).length=== 0} // Habilita o deshabilita el botón basado en la selección
-            component={Link}
-            to="/firmar"
+            disabled={selectedRows.length === 0} // Habilita o deshabilita el botón basado en la selección
           >
             {" "}
             <Stack direction="vertical" gap="xs">

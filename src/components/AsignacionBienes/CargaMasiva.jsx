@@ -195,7 +195,8 @@ const CargaMasiva = () => {
     createDisplayMode: "row",
     editDisplayMode: "row",
     positionActionsColumn: "last",
-
+    enableRowSelection: false,
+    
     enableColumnOrdering: true,
     enableStickyHeader: true,
     enableEditing: bulkLoad ? false : true,

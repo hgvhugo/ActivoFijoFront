@@ -10,9 +10,14 @@ const Menu = () => {
   const [options] = useState([
     { label: 'Inicio', path: '/' },
     { label: 'Recepción de Bienes', path: '/recepcionBienes' },
-    { label: 'Contacto', path: '/contacto' },
-  ]);
+    { label: 'Asignacion de Bienes', path: '/asignacionBienes' },
+    { label: 'Firma', path: '/firmar' },
 
+    { label: 'Dashboard Operativo', path: '/dashboard' },
+    
+    
+  ]);
+  
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchValue.toLowerCase())
   );

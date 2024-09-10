@@ -9,6 +9,7 @@ import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/code-highlight/styles.css";
+import '@mantine/charts/styles.css';
 import { MantineProvider, Container, createTheme } from "@mantine/core";
 import theme from "./helpers/Tema.jsx";
 import { QueryClientProvider } from "@tanstack/react-query";

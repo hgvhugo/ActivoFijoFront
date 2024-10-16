@@ -10,6 +10,8 @@ import RecepcionBienes from "./pages/RecepcionBienes.jsx";
 import AsignacionBienes from "./pages/AsignacionBienes.jsx";
 import Firma from "./components/Firma/Firma.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import FirmaAsignacionBienes from "./components/AsignacionBienes/FirmaAsignacionBienes.jsx";
+import ResguardoBienes from "./pages/ResguardoBienes.jsx";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -35,14 +37,17 @@ function App() {
         <div className="divider" />
         <div className="contenedor-padre">
           <div className="contenedor-hijo">
-            <Routes>
+             <Routes>
               <Route path="/recepcionBienes" element={<RecepcionBienes />} />
               <Route path="/asignacionBienes" element={<AsignacionBienes />} />
               <Route path="/dashboard" element={<Dashboard/>} />
+              <Route path="/resguardo" element={<ResguardoBienes />} />
+              <Route path="/firmarAsigacion" element={<FirmaAsignacionBienes />} />
 
               <Route path="/firmar" element={<Firma />} />
 
             </Routes>
+            
           </div>
           <hr className="linea-divisoria" />
 

@@ -74,29 +74,56 @@ const CargaMasiva = () => {
 
   const [validationErrors, setValidationErrors] = useState({});
 
-  const defaultHeaders = {
-    CodigoBien: "",
-    NombreBien: "",
-    FechaEfectos: "",
-    EstatusId: "",
-    FotoBien: "",
-    Descripcion: "",
-    Marca: "",
-    Modelo: "",
-    Serie: "",
-    PartidaId: "",
-    CambId: "",
-    CucopId: "",
-    NumeroContrato: "",
-    NumeroFactura: "",
-    FechaFactura: "",
-    ValorFactura: "",
-    ValorDepreciado: "",
-    UnidadAdministrativaId: "",
-    UbicacionId: "",
-    EmpleadoId: "",
-  };
 
+  const defaultHeaders = {
+    CodigoBien: "Código de Bien",
+    NombreBien: "Nombre del Bien",
+    FechaEfectos: "Fecha de Efectos",
+    EstatusId: "Estatus del Bien",
+    // FotoBien: "Foto del Bien",
+    Descripcion: "Descripción",
+    Marca: "Marca",
+    Modelo: "Modelo",
+    Serie_QR_CodBarras: "Serie/QR/Codigo de Barras",
+    PartidaId: "Objeto de Gasto",
+    CambId: "CAMB",
+    CucopId: "CUCOP",
+    NumeroContrato: "Número de Contrato",
+    NumeroFactura: "Número de Factura",
+    FechaFactura: "Fecha de Factura",
+    ValorFactura: "Valor de Factura",
+    ValorDepreciado: "Valor Depreciado",
+    UnidadAdministrativaId: "Unidad Administrativa",
+    UbicacionId: "Ubicación",
+    EmpleadoId: "Empleado",
+  };
+ 
+  
+  // const defaultHeaders = {
+  //   CodigoBien: "",
+  //   NombreBien: "",
+  //   FechaEfectos: "",
+  //   EstatusId: "",
+  //   FotoBien: "",
+  //   Descripcion: "",
+  //   Marca: "",
+  //   Modelo: "",
+  //   Serie: "",
+  //   PartidaId: "",
+  //   CambId: "",
+  //   CucopId: "",
+  //   NumeroContrato: "",
+  //   NumeroFactura: "",
+  //   FechaFactura: "",
+  //   ValorFactura: "",
+  //   ValorDepreciado: "",
+  //   UnidadAdministrativaId: "",
+  //   UbicacionId: "",
+  //   EmpleadoId: "",
+  // };
+
+
+  
   //   const { data, refetch } = useGet(url, conAutorizacion);
 
   //   useEffect(() => {
@@ -118,17 +145,67 @@ const CargaMasiva = () => {
         }
       );
 
+      // if (response.ok) {
+      //   handleSuccess("Carga masiva exitosa");
+      //   setBulkLoad(!bulkLoad);
+      //   setFile(null);
+      //   if (fileInputRef.current) {
+      //     fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
+      //    }
       if (response.ok) {
-        handleSuccess("Carga masiva exitosa");
+        const result = await response.json();
+  
+        if (result.archivoErrores) {
+          // Convertir el archivo de base64 a Blob
+          const byteCharacters = atob(result.archivoErrores);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  
+          // Crear un enlace para descargar el archivo
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'errores.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+  
+          setBulkLoad(!bulkLoad);
+          setFile(null);
+          if (fileInputRef.current) {
+                fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
+               }
+          handleError("Se encontraron registros inválidos");
+          return; // Salir del método y no continuar con el procesamiento
+        } else {
+          setBulkLoad(!bulkLoad);
+          setFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
+           }
+          handleSuccess(result.mensaje || "Carga exitosa.");
+        }   
+
+      } else if (response.status === 400) {
+        const result = await response.json();
+        handleError(result.Message || "Error en la carga masiva");
         setBulkLoad(!bulkLoad);
         setFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
          }
-    
-
-      } else {
+      }
+      
+      else {
         handleError("Error en la carga masiva");
+        setBulkLoad(!bulkLoad);
+        setFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Restablecer el valor del input de archivo
+         }
       }
     } catch (error) {
       console.error(error);
@@ -311,10 +388,13 @@ const CargaMasiva = () => {
     reader.readAsArrayBuffer(selectedFile);
   };
 
+
+
+
   const columns = useMemo(() => {
     const headers = datosExcel.length === 0 ? defaultHeaders : datosExcel[0];
     const cols = Object.keys(headers).map((key) => ({
-      header: key.charAt(0).toUpperCase() + key.slice(1),
+      header: defaultHeaders[key] || key.charAt(0).toUpperCase() + key.slice(1),
       accessorKey: key,
       mantineEditTextInputProps: ({ cell, row }) => ({
         onBlur: (event) => {
@@ -324,8 +404,7 @@ const CargaMasiva = () => {
         },
       }),
     }));
-
-    // console.log(cols);
+  
     return cols;
   }, [datosExcel, edited]);
 
@@ -342,7 +421,7 @@ const CargaMasiva = () => {
     enableColumnOrdering: true,
     enableStickyHeader: true,
     enableEditing: bulkLoad ? false : true,
-    enableRowActions: true,
+    // enableRowActions: true,
 
     mantineTableContainerProps: {
       sx: {
@@ -354,27 +433,27 @@ const CargaMasiva = () => {
     onCreatingRowSave: handleCreate,
     onEditingRowCancel: () => setValidationErrors({}),
     onEditingRowSave: handleUpdate,
-    renderRowActions: ({ row, table }) => (
-      <Flex gap="md">
-        <Tooltip label="Editar">
-          <ActionIcon
-            onClick={() => table.setEditingRow(row)}
-            disabled={bulkLoad}
-          >
-            <IconEdit />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Borrar">
-          <ActionIcon
-            color="red"
-            onClick={() => openDeleteConfirmModal(row)}
-            disabled={bulkLoad}
-          >
-            <IconTrash />
-          </ActionIcon>
-        </Tooltip>
-      </Flex>
-    ),
+    // renderRowActions: ({ row, table }) => (
+    //   <Flex gap="md">
+    //     <Tooltip label="Editar">
+    //       <ActionIcon
+    //         onClick={() => table.setEditingRow(row)}
+    //         disabled={bulkLoad}
+    //       >
+    //         <IconEdit />
+    //       </ActionIcon>
+    //     </Tooltip>
+    //     <Tooltip label="Borrar">
+    //       <ActionIcon
+    //         color="red"
+    //         onClick={() => openDeleteConfirmModal(row)}
+    //         disabled={bulkLoad}
+    //       >
+    //         <IconTrash />
+    //       </ActionIcon>
+    //     </Tooltip>
+    //   </Flex>
+    // ),
     renderTopToolbarCustomActions: ({ table }) => (
       <Flex align="center" gap="md">
         <Button

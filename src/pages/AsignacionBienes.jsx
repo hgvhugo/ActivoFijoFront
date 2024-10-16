@@ -45,6 +45,7 @@ const AsignacionBienes = () => {
     );
 
     try {
+      setFilteredData([]);
       const response = await fetch(url);
       if (!response.ok) {
         const errorText = await response.text();

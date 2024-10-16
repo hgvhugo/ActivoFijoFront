@@ -11,7 +11,7 @@ const Menu = () => {
     { label: 'Inicio', path: '/' },
     { label: 'Recepción de Bienes', path: '/recepcionBienes' },
     { label: 'Asignacion de Bienes', path: '/asignacionBienes' },
-    { label: 'Firma', path: '/firmar' },
+    { label: 'Resguardo de Bienes', path: '/resguardo' },
 
     { label: 'Dashboard Operativo', path: '/dashboard' },
     
@@ -48,7 +48,7 @@ const Menu = () => {
             icon={<IconChevronRight size={14} />}
           />
         ))}
-        <NavLink
+        {/* <NavLink
           label="Más Opciones"
           icon={<IconHome size={14} />}
           childrenOffset={28}
@@ -63,7 +63,7 @@ const Menu = () => {
             component={RouterNavLink}
             to="/opcion-anidada-2"
           />
-        </NavLink>
+        </NavLink> */}
       </Drawer>
     </>
   );

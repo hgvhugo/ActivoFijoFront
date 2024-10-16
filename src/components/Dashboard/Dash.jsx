@@ -139,7 +139,7 @@ const colors = ["#4c6ef5", "#ae3ec9", "#0ca678", "#f06595"]; // Define los color
 
   return (
     <div>
-      <Paper shadow="xl" radius="md" p="xs" withBorder>
+      {/* <Paper shadow="xl" radius="md" p="xs" withBorder>
         <Grid>
           <Grid.Col span={6}>
             <BarChart
@@ -177,7 +177,7 @@ const colors = ["#4c6ef5", "#ae3ec9", "#0ca678", "#f06595"]; // Define los color
           </Grid.Col>
           <Grid.Col span={6}></Grid.Col>
         </Grid>
-      </Paper>
+      </Paper> */}
 
       <Paper shadow="xl" radius="md" p="xs" withBorder>
         <MantineReactTable table={table} />

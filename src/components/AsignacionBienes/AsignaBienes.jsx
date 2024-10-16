@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo,useContext} from "react";
 import {
   FileInput,
   Table,
@@ -13,6 +13,7 @@ import {
   Group,
   Text,
   Stack,
+  Modal,
 } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import {
@@ -31,6 +32,11 @@ import {
 import { modals } from "@mantine/modals";
 import { URL_BASE_SERVICIOS, API_ENDPOINTS } from "../../config/Endpoints.jsx";
 import { Link } from "react-router-dom";  
+import { EditedRowsContext } from "../../context/EdicionRowsContext.jsx";
+import FirmaAsignacionBienes from "./FirmaAsignacionBienes.jsx";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+ 
 
 
 const AsignaBienes = ({ data, isLoading2, isError }) => {
@@ -42,6 +48,17 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [empleados, setEmpleados] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
+  const [dataUpdated, setDataUpdated] = useState(false); // Estado adicional para forzar la actualización
+  const [tableData, setTableData] = useState(data);
+
+  /// se agrega el contexto de EditedRowsContext
+  const { editedRows, setEditedRows } = useContext(EditedRowsContext);
+
+
+  const [modalOpened, setModalOpened] = useState(false);
+
+  const queryClient = useQueryClient();
+
 
   const buildUrlWithParams = (baseUrl, params) => {
     const url = new URL(baseUrl);
@@ -91,7 +108,8 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     refetch();
   }, [refreshData, url]);
 
- 
+
+
   ///////  Se agrega el useEffect para la consulta de empleados
   useEffect(() => {
     const fetchEmpleados = async () => {
@@ -107,7 +125,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     };
 
     fetchEmpleados();
-  }, []);
+  }, [unidadAdministrativaId]);
 
  
   const handleCreate = async ({ data, exitCreateMode }) => {
@@ -155,19 +173,47 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     });
 
     
-  const columnsToExclude = ["id", "FotoBien", "FotoBienFile", ""]; // Array de claves a excluir
+  const columnsToExclude = ["id", "FotoBien", "FotoBienFile", "fotosBienActivo",""]; // Array de claves a excluir
 
+ 
+
+  const defaultHeaders = {
+    CodigoBien: "Código de Bien",
+    NombreBien: "Nombre del Bien",
+    FechaEfectos: "Fecha de Efectos",
+    EstatusId: "Estatus del Bien",
+    // FotoBien: "Foto del Bien",
+    Descripcion: "Descripción",
+    Marca: "Marca",
+    Modelo: "Modelo",
+    Serie: "Serie/QR/Codigo de Barras",
+    Partida: "Objeto de Gasto",
+    Camb: "CAMB",
+    Cucop: "CUCOP",
+    NumeroContrato: "Número de Contrato",
+    NumeroFactura: "Número de Factura",
+    FechaFactura: "Fecha de Factura",
+    ValorFactura: "Valor de Factura",
+    ValorDepreciado: "Valor Depreciado",
+    UnidadAdministrativa: "Unidad Administrativa",
+    Ubicacion: "Ubicación",
+    empleado: "Empleado",
+    EstadoFisicoId: "Estado Físico",
+  };
+
+
+  
   const columns = useMemo(() => {
-    if (fetched && fetched.length > 0) {
-      return Object.keys(fetched[0])
-        .filter((key) => !columnsToExclude.includes(key)) // Filtrar las claves a excluir
+     if (tableData && tableData.length > 0) {
+      return Object.keys(tableData[0])
+        .filter((key) => !columnsToExclude.includes(key) ) // Filtrar las claves a excluir y que estén en defaultHeaders
         .map((key) => {
           const isObject =
-            typeof fetched[0][key] === "object" && fetched[0][key] !== null;
+            typeof tableData[0][key] === "object" && tableData[0][key] !== null;
           if (key === "empleado") {
             return {
               accessorKey: key,
-              header: "Empleado",
+              header: defaultHeaders[key],
               accessorFn: (originalRow) =>
                 originalRow[key]?.id?.toString() || "", // Convertir id a cadena para el filtrado
               Cell: ({ row }) => {
@@ -181,7 +227,6 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
               },
               editVariant: "select",
               filterVariant: "select",
-
               mantineFilterSelectProps: {
                 data:
                   empleados.length > 0
@@ -195,24 +240,70 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
           }
           return {
             accessorKey: key,
-            header: key.charAt(0).toUpperCase() + key.slice(1), // Convertir la clave a título
+            header: defaultHeaders[key.charAt(0).toUpperCase() + key.slice(1)] ,  // Usar el valor de defaultHeaders como encabezado
+                    // header: key.charAt(0).toUpperCase() + key.slice(1), 
             enableEditing: false,
             Cell: ({ row }) => {
               const value = row.original[key];
               return isObject ? value?.descripcion || "N/A" : value ?? "N/A"; // Mostrar 'N/A' si no existe 'descripcion' o si el valor es null
             },
-            mantineEditTextInputProps: ({ cell, row }) => ({
-              onBlur: (event) => {
-                if (row.id !== "mrt-row-create") {
-                  setEdited({ ...edited, [row.id]: row._valuesCache });
-                }
-              },
-            }),
           };
         });
     }
     return [];
-  }, [fetched, edited, empleados, validationErrors]);
+  }, [tableData, empleados, columnsToExclude]);
+
+  
+  // const columns = useMemo(() => {
+  //   if (tableData && tableData.length > 0) {
+  //     return Object.keys(tableData[0])
+  //       .filter((key) => !columnsToExclude.includes(key)) // Filtrar las claves a excluir
+  //       .map((key) => {
+  //         const isObject =
+  //           typeof tableData[0][key] === "object" && tableData[0][key] !== null;
+  //         if (key === "empleado") {
+  //           return {
+  //             accessorKey: key,
+  //             header: "Empleado",
+  //             accessorFn: (originalRow) =>
+  //               originalRow[key]?.id?.toString() || "", // Convertir id a cadena para el filtrado
+  //             Cell: ({ row }) => {
+  //               const value = row.original[key];
+  //               if (value) {
+  //                 const { rfc, nombre, apellidoPaterno, apellidoMaterno } =
+  //                   value;
+  //                 return `${rfc} ${nombre} ${apellidoPaterno} ${apellidoMaterno}`;
+  //               }
+  //               return ""; // Valor por defecto si empleado es nulo
+  //             },
+  //             editVariant: "select",
+  //             filterVariant: "select",
+  //             mantineFilterSelectProps: {
+  //               data:
+  //                 empleados.length > 0
+  //                   ? empleados.map((emp) => ({
+  //                       value: emp.id.toString(),
+  //                       label: `${emp.rfc} ${emp.nombre} ${emp.apellidoPaterno} ${emp.apellidoMaterno}`,
+  //                     }))
+  //                   : [{ value: "", label: "" }],
+  //             },
+  //           };
+  //         }
+  //         return {
+  //           accessorKey: key,
+  //           header: key.charAt(0).toUpperCase() + key.slice(1), // Convertir la clave a título
+  //           enableEditing: false,
+  //           Cell: ({ row }) => {
+  //             const value = row.original[key];
+  //             return isObject ? value?.descripcion || "N/A" : value ?? "N/A"; // Mostrar 'N/A' si no existe 'descripcion' o si el valor es null
+  //           },
+  //         };
+  //       });
+  //   }
+  //   return [];
+  // }, [tableData, empleados, columnsToExclude]);
+  
+  // [fetched, edited, empleados, validationErrors,setEditedRows]);
 
 
   useEffect(() => {
@@ -224,7 +315,8 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
   const table = useMantineReactTable({
     // columns: data.length >0 ? columnsData : columns,
     columns: columns,
-    data: data.length >0 ? data : fetched,
+    // data: data.length >0 ? data : fetched,
+    data:tableData,
     localization: MRT_Localization_ES,
     createDisplayMode: "row",
     editDisplayMode: "table",
@@ -234,6 +326,7 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
      getRowId: (row) => row.id, 
 
     onRowSelectionChange: setRowSelection,
+    selectAllMode: "all",
     initialState: { pagination: { pageSize: 5, pageIndex: 0 } },
     // positionToolbarAlertBanner: 'bottom',
 
@@ -309,6 +402,15 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
           console.log("Edited Object (onChange):", newEdited);
           return newEdited;
         });
+        setEditedRows((prevEdited) => {
+          const newEdited = {
+            ...prevEdited,
+            [row.id]: { ...row.original, [cell.column.id]: value },
+          };
+          console.log("Edited Object (onChange):", newEdited);
+          return newEdited;
+        });
+        
       },
     }),
     state: {
@@ -320,6 +422,65 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
     },
     
   });
+
+  const handleOpenModal = () => {
+    setModalOpened(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpened(false);
+  };
+  const handleFirmaSuccess = () => {
+    // console.log("handleFirmaSuccess");
+    // refetch().then(() => {
+    //   setDataUpdated(true); // Forzar la actualización del useEffect
+    // });
+    queryClient.invalidateQueries('AsignaBienes');
+    setDataUpdated(true);
+    handleCloseModal();
+    refetch();
+    // window.location.reload(); // Forzar recarga de la página
+
+  };
+
+
+  useEffect(() => {
+    if (fetched.length > 0 || dataUpdated) {
+      setRowSelection({});
+      setEdited({});
+      setEditedRows({});
+      console.log("useEffect rowSelection", rowSelection);
+      setDataUpdated(false); // Resetear el estado
+      setTableData(fetched); // Actualiza el estado de tableData con fetched
+
+    }
+  }, [fetched, dataUpdated, setEditedRows,data]);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      setTableData(data);
+      setRowSelection({});
+      setEdited({});
+      setEditedRows({});
+      setDataUpdated(false); // Resetear el estado
+      clearSelectionAndEdits();
+
+    }
+  }, [data]);
+  
+    // Función para limpiar las variables de selección y edición
+    const clearSelectionAndEdits = () => {
+      setRowSelection({});
+      setEdited({});
+      setEditedRows({});
+    };
+  
+    // useEffect(() => {
+    //   clearSelectionAndEdits();
+    // }, [data]); // Limpiar cuando los datos cambian
+ 
+ 
+    
 
   return (
     <Paper shadow="xl" radius="md" p="xs" withBorder>
@@ -335,8 +496,10 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
             size="xl"
             radius="md"
             disabled={Object.keys(rowSelection).length=== 0} // Habilita o deshabilita el botón basado en la selección
-            component={Link}
-            to="/firmar"
+            // component={Link}
+            // to="/firmarAsigacion"
+            onClick={handleOpenModal}
+
           >
             {" "}
             <Stack direction="vertical" gap="xs">
@@ -349,6 +512,15 @@ const AsignaBienes = ({ data, isLoading2, isError }) => {
         </Grid.Col>
       </Grid>
       <Space h="lg" />
+      <Modal
+        opened={modalOpened}
+        onClose={handleCloseModal}
+        // title="Firma Electrónica"
+        // size="lg"
+        fullScreen
+      >
+        <FirmaAsignacionBienes onSubmit={handleFirmaSuccess} />
+      </Modal>  
     </Paper>
   );
 };

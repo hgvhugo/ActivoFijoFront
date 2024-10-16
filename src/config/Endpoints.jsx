@@ -9,4 +9,8 @@ export const API_ENDPOINTS = {
     BuscarRegistroBien: '/api/RegistroBienes/buscar',
     ConteosRegistroBien: '/api/RegistroBienes/conteos',
     EmpleadosxUnidad: '/api/Empleado/unidad/',
+    FirmaAsignador: '/api/RegistroBienes/firmaAsignador',
+    BienesSinFirmarResguardo: '/api/RegistroBienes/registrosSinFirmar',
+    FirmaResguardo: '/api/RegistroBienes/firmaResguardo',
+    EnviarCorreo: '/api/Correo/enviar-correo',
 }

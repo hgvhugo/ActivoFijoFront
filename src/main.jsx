@@ -16,6 +16,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "./hooks/queryClient.js";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { EditedRowsProvider } from "./context/EdicionRowsContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -25,10 +26,12 @@ createRoot(document.getElementById("root")).render(
           <QueryClientProvider client={queryClient}>
             <Notifications />
             <Container size="responsive">
+              <EditedRowsProvider>
               <Routes>
                 <Route path="*" element={<App />} />
                 {/* <App /> */}
               </Routes>
+              </EditedRowsProvider>
             </Container>
           </QueryClientProvider>
           <Notifications />

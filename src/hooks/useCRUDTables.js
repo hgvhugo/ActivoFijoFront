@@ -148,3 +148,52 @@ export function useDelete(url, conAutorizacion, queryKey = ['consulta']) {
     },
   });
 }
+
+export function useUpdateWithFormData(url, conAutorizacion, queryKey = ['consulta']) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (formData) => {
+      const headers = {};
+      if (conAutorizacion && conAutorizacion.trim() !== '') {
+        headers['Authorization'] = `Bearer ${conAutorizacion}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: formData, // Enviar FormData en lugar de JSON
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text(); // Leer el cuerpo de la respuesta
+        let errorMessage = `${response.statusText}. Details: ${errorText}`;
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.Message) {
+            errorMessage = `${errorJson.Message}`;
+          }
+        } catch (e) {
+          // Si no se puede analizar como JSON, usar el texto decodificado
+          const decodedErrorText = new TextDecoder('utf-8').decode(new Uint8Array([...errorText].map(char => char.charCodeAt(0))));
+          errorMessage = `${decodedErrorText}`;
+        }
+
+        throw new Error(errorMessage);}
+
+      const data = await response.json();
+      return data;
+    },
+    onMutate: (nuevoRegistro) => {
+      queryClient.setQueryData(queryKey, (registrosPrevios) =>
+        registrosPrevios?.map((registroPrevio) =>
+          registroPrevio.id === nuevoRegistro.id ? nuevoRegistro : registroPrevio,
+        ),
+      );
+    },
+    onSuccess: () => queryClient.invalidateQueries(queryKey),
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+}

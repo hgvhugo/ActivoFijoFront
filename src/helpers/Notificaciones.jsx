@@ -14,15 +14,16 @@ import {
     export const handleError = (error) => {
       notifications.show({
         title: "Error",
-        message: "Causa: " + error,
+        message:  `Causa: ${error}`,
         radius: "md",
-        autoClose: true,
+        autoClose: 10000,
         withCloseButton: false,
         color: "#d10003",
         variant: "filled",
         icon: xIcon,
         pos: "top-right",
         classNames: styles,
+
       });
     };
   
@@ -31,7 +32,7 @@ import {
         title: "Éxito	",
         message: message,
         radius: "md",
-        autoClose: true,
+        autoClose: 10000,
         withCloseButton: false,
         icon: checkIcon,
         color: "#004208",
@@ -47,7 +48,7 @@ import {
         title: "Información ",
         message: message,
         radius: "md",
-        autoClose: true,
+        autoClose: 10000,
         withCloseButton: false,
         icon: infoIcon,
         color: "#ECC608",

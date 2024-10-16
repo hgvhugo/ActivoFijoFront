@@ -5,13 +5,14 @@ import Titulo from "../components/Titulo.jsx";
 import CargaMasiva from "../components/RecepcionBienes/CargaMasiva.jsx";
 
 const RecepcionBienes = () => {
+  
   return (
     <div>
       <Titulo titulo="Recepción de Bienes (Alta)" />
       <Space h="lg" />
 
-      <div>
-        <Busqueda2 />
+      <div  >
+        {/* <Busqueda2 /> */}
       </div>
 
       <Space h="lg" />
